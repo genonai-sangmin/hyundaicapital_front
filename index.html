@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>현대캐피탈 AI 어시스턴트</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --navy-900: #061b3e; --navy-700: #0a2a5e; --navy-500: #1d4585;
+    --ink: #111826; --ink-2: #1b2433; --ink-3: #4b5666; --ink-4: #6b7587; --ink-5: #7a8598;
+    --line: #e3e7ee; --line-2: #dfe4ec; --line-3: #d6dce6; --surface-2: #f6f8fc; --tint: #eaf0fa;
+    --ok: #1f6b3a; --warn: #8a3c0d;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', system-ui, sans-serif;
+         -webkit-font-smoothing: antialiased; color: var(--ink); background: #eef1f6; }
+  button { font-family: inherit; cursor: pointer; }
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* 좌측 내비게이션 */
+  .nav { width: 264px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--navy-900); color: #fff; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 24px 20px 20px; }
+  .brand .mark { width: 32px; height: 32px; flex-shrink: 0; border: 1px dashed #4f6a96; border-radius: 6px;
+                 display: flex; align-items: center; justify-content: center; font-size: 9px; color: #8ea3c1; }
+  .brand .name { font-size: 14px; font-weight: 600; letter-spacing: -.01em; }
+  .brand .sub { font-size: 11px; color: #9fb0cb; letter-spacing: .04em; margin-top: 2px; }
+  .nav-new { width: 100%; height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px;
+             background: var(--navy-700); color: #fff; border: 1px solid var(--navy-500); border-radius: 8px;
+             font-size: 14px; font-weight: 500; }
+  .nav-new:hover { background: #0e3269; }
+  .nav-label { padding: 8px 16px 6px; font-size: 11px; font-weight: 600; letter-spacing: .06em; color: #7d90ad; }
+  .nav-item { padding: 10px 12px; border-radius: 8px; font-size: 13px; color: #b9c6da;
+              overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nav-item.on { background: #0e3269; color: #fff; font-weight: 500; }
+  .nav-user { display: flex; align-items: center; gap: 10px; padding: 16px 20px; border-top: 1px solid #12305f; }
+  .nav-user .av { width: 32px; height: 32px; border-radius: 99px; background: var(--navy-500); color: #cfdcf0;
+                  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+
+  /* 본문 */
+  .main { flex-grow: 1; display: flex; flex-direction: column; background: #fff; min-width: 0; }
+  .head { height: 64px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+          padding: 0 28px; border-bottom: 1px solid var(--line); }
+  .head h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 99px;
+           background: var(--tint); color: var(--navy-700); font-size: 12px; font-weight: 500; }
+  .badge i { width: 6px; height: 6px; border-radius: 99px; background: var(--navy-700); }
+  .btn-ghost { height: 34px; padding: 0 14px; display: flex; align-items: center; gap: 6px; background: #fff;
+               border: 1px solid var(--line-3); border-radius: 8px; font-size: 13px; font-weight: 500; color: #3b4658; }
+  .btn-ghost:hover { background: #eef2f8; }
+  .btn-ghost:disabled { opacity: .5; cursor: default; }
+
+  .feed { flex-grow: 1; overflow-y: auto; padding: 28px 28px 8px; }
+  .feed-inner { max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+  .scroll { scrollbar-width: thin; scrollbar-color: #cbd3df transparent; }
+  .scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+  .scroll::-webkit-scrollbar-thumb { background: #cbd3df; border-radius: 99px; }
+
+  .row { display: flex; gap: 12px; }
+  .row.user { justify-content: flex-end; }
+  .bubble { max-width: 560px; padding: 14px 18px; border-radius: 14px 14px 4px 14px;
+            background: var(--navy-700); color: #fff; font-size: 15px; line-height: 24px; white-space: pre-wrap; }
+  .av-bot { width: 32px; height: 32px; flex-shrink: 0; border-radius: 99px; background: var(--navy-700);
+            display: flex; align-items: center; justify-content: center; }
+  .body { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+  .answer { font-size: 15px; line-height: 26px; color: var(--ink-2); }
+  .answer strong { font-weight: 600; }
+  .answer table { width: 100%; border-collapse: collapse; border: 1px solid var(--line); border-radius: 10px;
+                  overflow: hidden; font-size: 13.5px; }
+  .answer th { padding: 11px 16px; background: var(--surface-2); border-bottom: 1px solid #e6eaf2;
+               font-size: 12.5px; font-weight: 600; color: var(--ink-3); text-align: left; }
+  .answer td { padding: 11px 16px; border-bottom: 1px solid #f0f2f7; color: var(--ink); }
+  .answer td.num { text-align: right; font-family: 'IBM Plex Mono', monospace; font-weight: 500; }
+  .answer th.num { text-align: right; }
+  .table-wrap { overflow-x: auto; }
+  .caret { display: inline-block; width: 8px; height: 17px; vertical-align: -3px; margin-left: 2px;
+           background: var(--navy-700); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 0%,45% { opacity: 1 } 50%,100% { opacity: 0 } }
+
+  /* 카드 (HITL / 출처) */
+  .card { border: 1px solid var(--line-2); border-radius: 12px; background: #fff; overflow: hidden; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 13px 18px;
+               background: var(--surface-2); border-bottom: 1px solid #e6eaf2; }
+  .card-head .t { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--navy-700); }
+  .card-head .k { font-size: 11px; color: var(--ink-5); font-family: 'IBM Plex Mono', monospace; }
+  .card-body { padding: 18px; }
+  .card-q { font-size: 15px; font-weight: 500; line-height: 24px; margin-bottom: 14px; white-space: pre-wrap; }
+
+  .opt { display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 14px 16px; background: #fff;
+         border: 1px solid var(--line-2); border-radius: 10px; text-align: left; margin-bottom: 8px;
+         transition: border-color .12s, background .12s; }
+  .opt:hover:not(:disabled) { border-color: var(--navy-700); background: #f7f9fd; }
+  .opt.on { border-color: var(--navy-700); background: #f4f7fd; }
+  .opt:disabled { cursor: default; }
+  .opt .mark { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; border-radius: 99px;
+               border: 1.5px solid #c3cbd8; background: #fff; }
+  .opt.on .mark { border: 5.5px solid var(--navy-700); }
+  .opt .l { font-size: 14px; font-weight: 500; }
+  .opt .d { font-size: 12.5px; color: var(--ink-4); line-height: 18px; margin-top: 3px; }
+
+  .custom { display: flex; gap: 8px; margin-top: 12px; padding-top: 14px; border-top: 1px dashed var(--line); }
+  .custom input { flex-grow: 1; height: 40px; padding: 0 14px; border: 1px solid var(--line-3); border-radius: 8px;
+                  font-family: inherit; font-size: 14px; outline: none; }
+  .custom input:focus { border-color: var(--navy-700); }
+  .btn-primary { background: var(--navy-700); color: #fff; border: none; border-radius: 8px;
+                 font-size: 14px; font-weight: 600; height: 44px; padding: 0 24px; }
+  .btn-primary:hover:not(:disabled) { background: var(--navy-900); }
+  .btn-primary:disabled { background: #c3cbd8; cursor: default; }
+  .btn-reject { height: 44px; padding: 0 24px; background: #fff; color: var(--ink-3);
+                border: 1px solid var(--line-3); border-radius: 8px; font-size: 14px; font-weight: 500; }
+  .btn-reject:hover:not(:disabled) { background: #f4f6fa; border-color: #9aa4b5; }
+  .btn-reject:disabled { opacity: .5; cursor: default; }
+
+  pre.sql { margin: 0; padding: 16px; background: #0d1b30; color: #dbe6f7; border-radius: 10px;
+            font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12.5px; line-height: 21px;
+            overflow-x: auto; white-space: pre; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 6px;
+          background: #f2f4f8; color: var(--ink-3); font-size: 12px; font-weight: 500; }
+  .chip.ok { background: #eef7f0; color: var(--ok); }
+  .decided { display: flex; align-items: center; gap: 8px; margin-top: 18px; padding-top: 14px;
+             border-top: 1px solid #eef1f6; font-size: 13px; color: var(--ink-4); }
+  .decided i { width: 7px; height: 7px; border-radius: 99px; background: #9aa4b5; }
+  .decided i.ok { background: var(--ok); }
+
+  .src { display: flex; gap: 14px; width: 100%; padding: 16px; background: #fff; border: none;
+         border-bottom: 1px solid #f0f2f7; text-align: left; }
+  .src:last-of-type { border-bottom: none; }
+  .src:hover { background: #f7f9fd; }
+  .src .n { width: 22px; height: 22px; flex-shrink: 0; border-radius: 6px; background: var(--tint);
+            color: var(--navy-700); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .src .f { font-size: 13.5px; font-weight: 500; }
+  .src .m { font-size: 11.5px; color: var(--ink-5); font-family: 'IBM Plex Mono', monospace; }
+  .src .p { font-size: 13px; line-height: 21px; color: #5b6577; margin-top: 6px;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .notice { padding: 14px 16px; border: 1px solid #f0dfd2; border-radius: 10px; background: #fdf7f2; }
+  .notice .t { font-size: 13.5px; font-weight: 500; color: var(--warn); margin-bottom: 6px; }
+  .notice .d { font-size: 13px; line-height: 21px; color: #6b5a4c; white-space: pre-wrap; }
+  .muted { padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: #fafbfd;
+           font-size: 13.5px; line-height: 21px; color: var(--ink-4); }
+
+  /* 입력창 */
+  .composer-wrap { flex-shrink: 0; padding: 12px 28px 24px; }
+  .composer { max-width: 820px; margin: 0 auto; }
+  .composer .box { display: flex; align-items: flex-end; gap: 10px; padding: 12px 12px 12px 18px;
+                   border: 1px solid var(--line-3); border-radius: 14px; box-shadow: 0 1px 2px rgba(16,24,40,.04); }
+  .composer .box:focus-within { border-color: var(--navy-700); }
+  .composer textarea { flex-grow: 1; border: none; outline: none; resize: none; padding: 9px 0;
+                       font-family: inherit; font-size: 15px; line-height: 24px; max-height: 160px; }
+  .send { width: 40px; height: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+          border: none; border-radius: 10px; color: #fff; background: var(--navy-700); }
+  .send:disabled { background: #c3cbd8; cursor: default; }
+  .foot { margin-top: 10px; text-align: center; font-size: 11.5px; color: #97a0af; }
+
+  @media (max-width: 860px) {
+    .nav { display: none; }
+    .head, .feed, .composer-wrap { padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="nav">
+    <div class="brand">
+      <div class="mark">로고</div>
+      <div>
+        <div class="name">현대캐피탈 AI 어시스턴트</div>
+        <div class="sub">INTERNAL BETA</div>
+      </div>
+    </div>
+    <div style="padding: 0 16px 16px">
+      <button class="nav-new" id="btn-new">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        새 대화
+      </button>
+    </div>
+    <div class="nav-label">최근 대화</div>
+    <div id="nav-list" style="display: flex; flex-direction: column; gap: 2px; padding: 0 12px"></div>
+    <div style="flex-grow: 1"></div>
+    <div class="nav-user">
+      <div class="av">사</div>
+      <div>
+        <div style="font-size: 13px; font-weight: 500">사용자</div>
+        <div style="font-size: 11px; color: #8ea3c1">현대캐피탈</div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main">
+    <header class="head">
+      <div style="display: flex; align-items: center; gap: 12px; min-width: 0">
+        <h1 id="title">새 대화</h1>
+        <span class="badge"><i></i><span id="badge">에이전트 미선택</span></span>
+      </div>
+      <div style="display: flex; gap: 8px">
+        <button class="btn-ghost" id="btn-reset">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 4v4h4"/></svg>
+          처음부터
+        </button>
+        <button class="btn-ghost" id="btn-key">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8 3 3-3 3-2-2-2 2"/></svg>
+          인증키
+        </button>
+        <button class="btn-ghost" id="btn-verify">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg>
+          검증
+        </button>
+      </div>
+    </header>
+
+    <div class="feed scroll" id="feed"><div class="feed-inner" id="feed-inner"></div></div>
+
+    <div class="composer-wrap">
+      <div class="composer">
+        <div class="box">
+          <textarea id="input" rows="1" placeholder="무엇이든 물어보세요"></textarea>
+          <button class="send" id="btn-send" title="보내기">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
+        </div>
+        <div class="foot" id="foot">AI 가 생성한 답변입니다. 중요한 의사결정 전에는 원문과 데이터를 확인해 주세요.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 백엔드 엔드포인트 ────────────────────────────────────────
+// GenOS 게이트웨이 경유. 인증키는 소스에 박지 않고 브라우저(localStorage)에 둔다 —
+// 이 파일은 저장소에 들어가고, 박아 두면 페이지를 여는 누구나 키를 읽을 수 있다.
+const GENOS_URL = 'https://genos.genon.ai'
+const SERVING_ID = 688
+const CHAT_URL = `${GENOS_URL}/api/gateway/code_serving/${SERVING_ID}/chat`
+
+const tokenKey = 'genos_auth_key'
+function authKey(force) {
+  let key = localStorage.getItem(tokenKey) || ''
+  if (force || !key) {
+    key = (window.prompt('GenOS 인증키를 입력하세요', key) || '').trim()
+    if (key) localStorage.setItem(tokenKey, key)
+  }
+  return key
+}
+
+const BOT_ICON = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 3v4M9 13h.01M15 13h.01"/></svg>'
+const ICON_CHECK_CIRCLE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11 13.5 15.5 9"/><circle cx="12" cy="12" r="9"/></svg>'
+const ICON_SHIELD = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6.5v5c0 4.6 3.3 8.4 8 9.5 4.7-1.1 8-4.9 8-9.5v-5z"/></svg>'
+const ICON_DOC = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>'
+const ICON_TICK = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5 5L20 6"/></svg>'
+
+const feed = document.getElementById('feed')
+const feedInner = document.getElementById('feed-inner')
+const input = document.getElementById('input')
+const btnSend = document.getElementById('btn-send')
+const btnReset = document.getElementById('btn-reset')
+const btnNew = document.getElementById('btn-new')
+const btnVerify = document.getElementById('btn-verify')
+const btnKey = document.getElementById('btn-key')
+const badge = document.getElementById('badge')
+const title = document.getElementById('title')
+const navList = document.getElementById('nav-list')
+
+let sessionId = crypto.randomUUID()
+let busy = false          // 스트리밍 중
+let awaiting = false      // HITL 응답 대기 중
+let answerEl = null       // 현재 답변 노드
+let answerText = ''
+let history = []
+
+// ── 렌더 헬퍼 ────────────────────────────────────────────────
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+const el = (html) => { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstElementChild }
+const bottom = () => { feed.scrollTop = feed.scrollHeight }
+
+/** 툴 결과가 마크다운 파이프 표로 오므로 표·굵게만 처리한다. */
+function render(text) {
+  const out = []
+  const lines = text.split('\n')
+  for (let i = 0; i < lines.length; i += 1) {
+    const isTable = lines[i].trim().startsWith('|') && (lines[i + 1] || '').trim().startsWith('|--')
+    if (!isTable) { out.push({ kind: 'p', text: lines[i] }); continue }
+    const cells = (line) => line.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim())
+    const header = cells(lines[i])
+    const rows = []
+    i += 2
+    while (i < lines.length && lines[i].trim().startsWith('|')) { rows.push(cells(lines[i])); i += 1 }
+    i -= 1
+    out.push({ kind: 'table', header, rows })
+  }
+
+  const inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  const isNum = (v) => /^-?[\d,.]+$/.test(v)
+  let html = ''
+  let buffer = []
+  const flush = () => {
+    if (!buffer.length) return
+    const body = buffer.join('\n').replace(/^\n+|\n+$/g, '')
+    if (body) html += '<div style="white-space: pre-wrap">' + inline(body) + '</div>'
+    buffer = []
+  }
+  for (const block of out) {
+    if (block.kind === 'p') { buffer.push(block.text); continue }
+    flush()
+    const numCol = block.header.map((_, c) => block.rows.every((r) => isNum(r[c] || '')))
+    html += '<div class="table-wrap"><table><thead><tr>' +
+      block.header.map((h, c) => '<th class="' + (numCol[c] ? 'num' : '') + '">' + esc(h) + '</th>').join('') +
+      '</tr></thead><tbody>' +
+      block.rows.map((r) => '<tr>' + block.header.map((_, c) =>
+        '<td class="' + (numCol[c] ? 'num' : '') + '">' + esc(r[c] || '') + '</td>').join('') + '</tr>').join('') +
+      '</tbody></table></div>'
+  }
+  flush()
+  return html
+}
+
+function addUser(text) {
+  feedInner.appendChild(el('<div class="row user"><div class="bubble">' + esc(text) + '</div></div>'))
+  bottom()
+}
+
+function botRow(inner) {
+  const row = el('<div class="row"><div class="av-bot">' + BOT_ICON + '</div><div class="body"></div></div>')
+  row.querySelector('.body').appendChild(inner)
+  feedInner.appendChild(row)
+  bottom()
+  return row
+}
+
+function appendToken(text) {
+  if (!answerEl) {
+    answerEl = el('<div class="answer"></div>')
+    answerText = ''
+    botRow(answerEl)
+  }
+  answerText += text
+  answerEl.innerHTML = render(answerText) + '<span class="caret"></span>'
+  bottom()
+}
+
+function closeAnswer() {
+  if (answerEl) answerEl.innerHTML = render(answerText)
+  answerEl = null
+  answerText = ''
+}
+
+function addSources(docs) {
+  closeAnswer()
+  const card = el('<div class="card"></div>')
+  card.appendChild(el('<div class="card-head"><div class="t">' + ICON_DOC + '출처 ' + docs.length +
+    '건</div><div class="k">sourceDocuments</div></div>'))
+  const list = el('<div></div>')
+  docs.forEach((doc, i) => {
+    const m = doc.metadata || {}
+    const meta = [m.i_page != null ? 'p.' + m.i_page : '', m.score != null ? 'score ' + Number(m.score).toFixed(2) : '']
+      .filter(Boolean).join(' · ')
+    list.appendChild(el('<div class="src"><span class="n">' + (i + 1) + '</span><span style="min-width:0">' +
+      '<span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="f">' +
+      esc(m.file_name || '문서') + '</span><span class="m">' + esc(meta) + '</span></span>' +
+      '<div class="p">' + esc(doc.pageContent || '') + '</div></span></div>'))
+  })
+  card.appendChild(list)
+  botRow(card)
+}
+
+function addNotice(title, detail) {
+  closeAnswer()
+  botRow(el('<div class="notice"><div class="t">' + esc(title) + '</div><div class="d">' + esc(detail) + '</div></div>'))
+}
+
+// ── HITL ─────────────────────────────────────────────────────
+function addHitl(data) {
+  closeAnswer()
+  const elements = data.elements || []
+  const select = elements.find((e) => e.type === 'single-select' || e.type === 'multi-select')
+  if (select) return addSelect(select)
+  const approve = elements.find((e) => e.type === 'approve-button')
+  const reject = elements.find((e) => e.type === 'reject-button')
+  if (approve) return addApprove(approve, reject)
+  addNotice('표시할 수 없는 확인 요청', '지원하지 않는 요소입니다: ' + elements.map((e) => e.type).join(', '))
+  awaiting = false
+  sync()
+}
+
+function addSelect(element) {
+  const comp = element.component || {}
+  const card = el('<div class="card"></div>')
+  card.appendChild(el('<div class="card-head"><div class="t">' + ICON_CHECK_CIRCLE +
+    '사용자 확인 필요</div><div class="k">' + esc(element.type) + '</div></div>'))
+  const body = el('<div class="card-body"></div>')
+  body.appendChild(el('<div class="card-q">' + esc(comp.title || '선택해 주세요.') + '</div>'))
+
+  const lock = (chosenBtn, label) => {
+    card.querySelectorAll('button, input').forEach((n) => { n.disabled = true })
+    if (chosenBtn) chosenBtn.classList.add('on')
+    if (label) { badge.textContent = label }
+  }
+
+  ;(comp.options || []).forEach((opt) => {
+    const btn = el('<button class="opt"><span class="mark"></span><span><span class="l">' + esc(opt.label) +
+      '</span>' + (opt.desc ? '<span class="d">' + esc(opt.desc) + '</span>' : '') + '</span></button>')
+    btn.onclick = () => {
+      lock(btn, opt.label)
+      send({ interactionId: element.interactionId, action: 'submit', values: { selected: [opt.value], customInput: '' } })
+    }
+    body.appendChild(btn)
+  })
+
+  const custom = el('<div class="custom"><input placeholder="직접 입력"><button class="btn-primary" style="height:40px;padding:0 18px;font-weight:500">보내기</button></div>')
+  const field = custom.querySelector('input')
+  const submit = () => {
+    const value = field.value.trim()
+    if (!value) return
+    lock(null, '직접 입력')
+    send({ interactionId: element.interactionId, action: 'submit', values: { selected: [], customInput: value } })
+  }
+  custom.querySelector('button').onclick = submit
+  field.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); submit() } }
+  body.appendChild(custom)
+
+  card.appendChild(body)
+  botRow(card)
+}
+
+function addApprove(approve, reject) {
+  const fullTitle = (approve.component && approve.component.title) || '이 작업을 실행할까요?'
+  const at = fullTitle.indexOf('실행할 SQL:')
+  const headText = at === -1 ? fullTitle : fullTitle.slice(0, at).trim()
+  const sql = at === -1 ? '' : fullTitle.slice(at + '실행할 SQL:'.length).trim()
+
+  const card = el('<div class="card"></div>')
+  card.appendChild(el('<div class="card-head"><div class="t">' + ICON_SHIELD +
+    '실행 승인 필요</div><div class="k">approve-button</div></div>'))
+  const body = el('<div class="card-body"></div>')
+  body.appendChild(el('<div class="card-q">' + esc(headText) + '</div>'))
+
+  if (sql) {
+    body.appendChild(el('<div style="font-size:13px;color:var(--ink-4);line-height:20px;margin-bottom:12px">실행할 SQL</div>'))
+    body.appendChild(el('<pre class="sql">' + esc(sql) + '</pre>'))
+    body.appendChild(el('<div class="chips"><span class="chip ok">' + ICON_TICK +
+      '조회 전용(SELECT) 검사 통과</span><span class="chip">LIMIT 200 자동 부착</span>' +
+      '<span class="chip">표시된 SQL 이 그대로 실행됩니다</span></div>'))
+  }
+
+  const actions = el('<div style="display:flex;gap:10px;margin-top:18px"></div>')
+  const yes = el('<button class="btn-primary">답변 진행</button>')
+  const no = el('<button class="btn-reject">답변 거절</button>')
+  const decide = (ok) => {
+    yes.disabled = true
+    no.disabled = true
+    actions.remove()
+    body.appendChild(el('<div class="decided"><i class="' + (ok ? 'ok' : '') + '"></i>' +
+      (ok ? '승인됨 · SQL 을 실행했습니다' : '거절됨 · SQL 을 실행하지 않았습니다') + '</div>'))
+    const target = ok ? approve : (reject || approve)
+    send({ interactionId: target.interactionId, action: ok ? 'submit' : 'cancel', values: { selected: [], customInput: '' } })
+  }
+  yes.onclick = () => decide(true)
+  no.onclick = () => decide(false)
+  actions.appendChild(yes)
+  actions.appendChild(no)
+  body.appendChild(actions)
+
+  card.appendChild(body)
+  botRow(card)
+}
+
+// ── 전송 · SSE 수신 ───────────────────────────────────────────
+function sync() {
+  const locked = busy || awaiting
+  btnSend.disabled = locked
+  input.disabled = locked
+  btnVerify.disabled = busy
+  input.placeholder = awaiting ? '위 확인 요청에 먼저 응답해 주세요' : '무엇이든 물어보세요'
+}
+
+async function send(humanInput) {
+  const question = humanInput ? '' : input.value.trim()
+  if (!humanInput && !question) return
+
+  if (!humanInput) {
+    addUser(question)
+    history.push(question)
+    if (history.length === 1) { title.textContent = question; renderNav() }
+    input.value = ''
+    input.style.height = 'auto'
+  }
+
+  busy = true
+  awaiting = false
+  sync()
+
+  try {
+    const key = authKey(false)
+    if (!key) throw new Error('인증키가 없습니다. 헤더의 「인증키」로 등록해 주세요.')
+    // 세션은 헤더가 아니라 바디로 보낸다 — 게이트웨이가 x-genos-session-id 를 지운다.
+    const payload = humanInput
+      ? { question: '', stream: true, humanInput, sessionId }
+      : { question, stream: true, sessionId }
+    const res = await fetch(CHAT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) throw new Error('HTTP ' + res.status + (res.status === 401 ? ' — 인증키를 확인해 주세요' : ''))
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    for (;;) {
+      const { value, done } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const frames = buffer.split('\n\n')
+      buffer = frames.pop()
+      for (const frame of frames) {
+        const line = frame.split('\n').find((l) => l.startsWith('data: '))
+        if (!line) continue
+        let payload
+        try { payload = JSON.parse(line.slice(6)) } catch { continue }
+        handle(payload)
+      }
+    }
+  } catch (err) {
+    addNotice('응답을 받지 못했습니다', String(err && err.message ? err.message : err))
+  } finally {
+    closeAnswer()
+    busy = false
+    sync()
+    bottom()
+  }
+}
+
+function handle(frame) {
+  if (frame.event === 'token') return appendToken(frame.data)
+  if (frame.event === 'sourceDocuments') return addSources(frame.data || [])
+  if (frame.event === 'action') { awaiting = true; sync(); return addHitl(frame.data || {}) }
+  if (frame.event === 'error') return addNotice('처리 중 오류가 발생했습니다', frame.data || '')
+  // end: finally 에서 정리한다
+}
+
+// ── 화면 조작 ────────────────────────────────────────────────
+function renderNav() {
+  navList.innerHTML = ''
+  history.slice(0, 1).forEach((q) => navList.appendChild(el('<div class="nav-item on">' + esc(q) + '</div>')))
+}
+
+function reset() {
+  sessionId = crypto.randomUUID()
+  feedInner.innerHTML = ''
+  navList.innerHTML = ''
+  history = []
+  answerEl = null
+  answerText = ''
+  busy = false
+  awaiting = false
+  badge.textContent = '에이전트 미선택'
+  title.textContent = '새 대화'
+  sync()
+  input.focus()
+}
+
+btnSend.onclick = () => send(null)
+btnKey.onclick = () => authKey(true)
+btnReset.onclick = reset
+btnNew.onclick = reset
+
+btnVerify.onclick = async () => {
+  btnVerify.disabled = true
+  try {
+    const res = await fetch(CHAT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authKey(false) },
+      body: JSON.stringify({ question: '__verify__' }),
+    })
+    const json = await res.json()
+    addNotice('검증 응답', 'code ' + json.code + ' · ' + json.errMsg + ' · ' + (json.data && json.data.text))
+  } catch (err) {
+    addNotice('검증 실패', String(err))
+  } finally {
+    btnVerify.disabled = false
+  }
+}
+
+input.onkeydown = (e) => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(null) }
+}
+input.oninput = () => {
+  input.style.height = 'auto'
+  input.style.height = Math.min(input.scrollHeight, 160) + 'px'
+}
+
+sync()
+input.focus()
+</script>
+</body>
+</html>
