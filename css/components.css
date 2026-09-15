@@ -1,0 +1,119 @@
+/* UI 부품 — 버튼 · 말풍선 · 답변(표) · 카드(HITL/출처) · 알림.
+   JS 가 만들어 붙이는 마크업의 클래스도 전부 여기 있다 (js/messages.js, js/hitl.js). */
+
+/* ── 버튼 ──────────────────────────────────────────────────── */
+.btn-ghost { height: 34px; padding: 0 14px; display: flex; align-items: center; gap: 6px; background: #fff;
+             border: 1px solid var(--line-3); border-radius: 8px; font-size: 13px; font-weight: 500; color: #3b4658; }
+.btn-ghost:hover { background: #eef2f8; }
+.btn-ghost:disabled { opacity: .5; cursor: default; }
+
+.btn-primary { background: var(--navy-700); color: #fff; border: none; border-radius: 8px;
+               font-size: 14px; font-weight: 600; height: 44px; padding: 0 24px; }
+.btn-primary:hover:not(:disabled) { background: var(--navy-900); }
+.btn-primary:disabled { background: #c3cbd8; cursor: default; }
+.btn-primary.sm { height: 40px; padding: 0 18px; font-weight: 500; }
+
+.btn-reject { height: 44px; padding: 0 24px; background: #fff; color: var(--ink-3);
+              border: 1px solid var(--line-3); border-radius: 8px; font-size: 14px; font-weight: 500; }
+.btn-reject:hover:not(:disabled) { background: #f4f6fa; border-color: #9aa4b5; }
+.btn-reject:disabled { opacity: .5; cursor: default; }
+
+.send { width: 40px; height: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+        border: none; border-radius: 10px; color: #fff; background: var(--navy-700); }
+.send:disabled { background: #c3cbd8; cursor: default; }
+
+.badge { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 99px;
+         background: var(--tint); color: var(--navy-700); font-size: 12px; font-weight: 500; }
+.badge i { width: 6px; height: 6px; border-radius: 99px; background: var(--navy-700); }
+
+/* ── 대화 한 줄 ────────────────────────────────────────────── */
+.row { display: flex; gap: 12px; }
+.row.user { justify-content: flex-end; }
+.bubble { max-width: 560px; padding: 14px 18px; border-radius: 14px 14px 4px 14px;
+          background: var(--navy-700); color: #fff; font-size: 15px; line-height: 24px; white-space: pre-wrap; }
+.av-bot { width: 32px; height: 32px; flex-shrink: 0; border-radius: 99px; background: var(--navy-700);
+          display: flex; align-items: center; justify-content: center; }
+.body { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+
+/* ── 답변 본문 (js/markdown.js 가 만드는 마크업) ────────────── */
+.answer { font-size: 15px; line-height: 26px; color: var(--ink-2); }
+.answer strong { font-weight: 600; }
+.answer .para { white-space: pre-wrap; }
+.answer table { width: 100%; border-collapse: collapse; border: 1px solid var(--line); border-radius: 10px;
+                overflow: hidden; font-size: 13.5px; }
+.answer th { padding: 11px 16px; background: var(--surface-2); border-bottom: 1px solid #e6eaf2;
+             font-size: 12.5px; font-weight: 600; color: var(--ink-3); text-align: left; }
+.answer td { padding: 11px 16px; border-bottom: 1px solid #f0f2f7; color: var(--ink); }
+.answer td.num { text-align: right; font-family: var(--font-mono); font-weight: 500; }
+.answer th.num { text-align: right; }
+.table-wrap { overflow-x: auto; }
+
+.caret { display: inline-block; width: 8px; height: 17px; vertical-align: -3px; margin-left: 2px;
+         background: var(--navy-700); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 0%,45% { opacity: 1 } 50%,100% { opacity: 0 } }
+
+/* ── 카드 (HITL · 출처 공용 껍데기) ─────────────────────────── */
+.card { border: 1px solid var(--line-2); border-radius: 12px; background: #fff; overflow: hidden; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 13px 18px;
+             background: var(--surface-2); border-bottom: 1px solid #e6eaf2; }
+.card-head .t { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--navy-700); }
+.card-head .k { font-size: 11px; color: var(--ink-5); font-family: var(--font-mono); }
+.card-body { padding: 18px; }
+.card-q { font-size: 15px; font-weight: 500; line-height: 24px; margin-bottom: 14px; white-space: pre-wrap; }
+
+/* ── HITL: 에이전트 선택 ───────────────────────────────────── */
+.opt { display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 14px 16px; background: #fff;
+       border: 1px solid var(--line-2); border-radius: 10px; text-align: left; margin-bottom: 8px;
+       transition: border-color .12s, background .12s; }
+.opt:hover:not(:disabled) { border-color: var(--navy-700); background: #f7f9fd; }
+.opt.on { border-color: var(--navy-700); background: #f4f7fd; }
+.opt:disabled { cursor: default; }
+.opt .mark { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; border-radius: 99px;
+             border: 1.5px solid #c3cbd8; background: #fff; }
+.opt.on .mark { border: 5.5px solid var(--navy-700); }
+.opt .l { font-size: 14px; font-weight: 500; }
+.opt .d { font-size: 12.5px; color: var(--ink-4); line-height: 18px; margin-top: 3px; }
+
+.custom { display: flex; gap: 8px; margin-top: 12px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.custom input { flex-grow: 1; height: 40px; padding: 0 14px; border: 1px solid var(--line-3); border-radius: 8px;
+                font-family: inherit; font-size: 14px; outline: none; }
+.custom input:focus { border-color: var(--navy-700); }
+
+/* ── HITL: SQL 실행 승인 ───────────────────────────────────── */
+pre.sql { margin: 0; padding: 16px; background: #0d1b30; color: #dbe6f7; border-radius: 10px;
+          font-family: var(--font-mono); font-size: 12.5px; line-height: 21px;
+          overflow-x: auto; white-space: pre; }
+.sql-label { font-size: 13px; color: var(--ink-4); line-height: 20px; margin-bottom: 12px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 6px;
+        background: #f2f4f8; color: var(--ink-3); font-size: 12px; font-weight: 500; }
+.chip.ok { background: #eef7f0; color: var(--ok); }
+
+.actions { display: flex; gap: 10px; margin-top: 18px; }
+.decided { display: flex; align-items: center; gap: 8px; margin-top: 18px; padding-top: 14px;
+           border-top: 1px solid #eef1f6; font-size: 13px; color: var(--ink-4); }
+.decided i { width: 7px; height: 7px; border-radius: 99px; background: #9aa4b5; }
+.decided i.ok { background: var(--ok); }
+
+/* ── 출처 문서 ─────────────────────────────────────────────── */
+.src { display: flex; gap: 14px; width: 100%; padding: 16px; background: #fff; border: none;
+       border-bottom: 1px solid #f0f2f7; text-align: left; }
+.src:last-of-type { border-bottom: none; }
+.src:hover { background: #f7f9fd; }
+.src .n { width: 22px; height: 22px; flex-shrink: 0; border-radius: 6px; background: var(--tint);
+          color: var(--navy-700); font-size: 11px; font-weight: 600;
+          display: flex; align-items: center; justify-content: center; }
+.src .c { min-width: 0; }
+.src .h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.src .f { font-size: 13.5px; font-weight: 500; }
+.src .m { font-size: 11.5px; color: var(--ink-5); font-family: var(--font-mono); }
+.src .p { font-size: 13px; line-height: 21px; color: #5b6577; margin-top: 6px;
+          display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ── 알림 ──────────────────────────────────────────────────── */
+.notice { padding: 14px 16px; border: 1px solid #f0dfd2; border-radius: 10px; background: #fdf7f2; }
+.notice .t { font-size: 13.5px; font-weight: 500; color: var(--warn); margin-bottom: 6px; }
+.notice .d { font-size: 13px; line-height: 21px; color: #6b5a4c; white-space: pre-wrap; }
+.muted { padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: #fafbfd;
+         font-size: 13.5px; line-height: 21px; color: var(--ink-4); }
