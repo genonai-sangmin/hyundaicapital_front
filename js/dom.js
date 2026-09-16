@@ -23,6 +23,10 @@ export const refs = {
   loginPw: document.getElementById('login-pw'),
   loginError: document.getElementById('login-error'),
   loginSubmit: document.getElementById('login-submit'),
+  settings: document.getElementById('settings'),
+  settingsForm: document.getElementById('settings-form'),
+  settingsServing: document.getElementById('settings-serving'),
+  settingsKey: document.getElementById('settings-key'),
 }
 
 /** HTML 특수문자를 이스케이프한다. innerHTML 에 넣는 모든 사용자·모델 문자열은 반드시 통과시킨다. */

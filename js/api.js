@@ -7,7 +7,7 @@
  *     data: {"event": "token", "data": "조각"}\n\n
  *   event 종류: token | sourceDocuments | action | error | end
  */
-import { CHAT_URL, savedKey } from './config.js'
+import { CHAT_URL, savedKey, savedServingId } from './config.js'
 import { securityLevel } from './auth.js'
 
 /** 세션 ID 를 싣는 커스텀 헤더. 게이트웨이가 `x-genos-*` 주체 헤더(x-genos-session-id 포함)를
@@ -19,15 +19,22 @@ export const SESSION_HEADER = 'x-hc-session-id'
  *  ⚠ 브라우저가 보내는 값이라 위조할 수 있다. 화면 분기용이고, 실제 접근 통제로 삼으면 안 된다. */
 export const LEVEL_HEADER = 'x-hc-security-level'
 
+/** 사용자가 입력한 모델 서빙 ID 를 싣는 커스텀 헤더. 이름 규칙은 SESSION_HEADER 와 같다.
+ *  프록시(api/chat.js)가 이 값으로 게이트웨이 URL 을 만든다. 없으면 서버 기본값을 쓴다. */
+export const SERVING_HEADER = 'x-hc-serving-id'
+
 const FRAME_SEP = '\n\n'
 const DATA_PREFIX = 'data: '
 
-/** 저장된 키가 있을 때만 실어 보낸다. 없으면 프록시가 서버 키로 처리한다. */
+/** 저장된 값이 있을 때만 실어 보낸다. 없으면 프록시가 서버 기본값으로 처리한다. */
 function headers(sessionId) {
   const h = { 'Content-Type': 'application/json' }
   const key = savedKey()
   if (key) h.Authorization = `Bearer ${key}`
   if (sessionId) h[SESSION_HEADER] = sessionId
+
+  const servingId = savedServingId()
+  if (servingId) h[SERVING_HEADER] = servingId
 
   const level = securityLevel()
   if (level !== null) h[LEVEL_HEADER] = String(level)

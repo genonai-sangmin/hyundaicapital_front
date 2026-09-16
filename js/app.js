@@ -12,7 +12,7 @@
  * 관문이고, 받은 level 은 auth.js 가 들고 있다.
  */
 import { refs, el, esc, bottom } from './dom.js'
-import { promptKey } from './config.js'
+import { savedKey, savedServingId, saveSettings } from './config.js'
 import { login } from './auth.js'
 import { streamChat, verify } from './api.js'
 import { addUser, appendToken, closeAnswer, addSources, addNotice } from './messages.js'
@@ -113,7 +113,7 @@ async function runVerify() {
 
 /* ── 이벤트 바인딩 ─────────────────────────────────────────── */
 refs.btnSend.onclick = () => send(null)
-refs.btnKey.onclick = promptKey
+refs.btnKey.onclick = openSettings
 refs.btnReset.onclick = reset
 refs.btnNew.onclick = reset
 refs.btnVerify.onclick = runVerify
@@ -159,6 +159,20 @@ refs.loginForm.onsubmit = async (e) => {
   } finally {
     lockLogin(false)
   }
+}
+
+/* ── 연결 설정 ───────────────────────────────────────────────
+ * 모델 서빙 ID 와 인증 토큰. 둘 다 선택이고, 비우면 서버 기본값으로 돌아간다. */
+function openSettings() {
+  refs.settingsServing.value = savedServingId()
+  refs.settingsKey.value = savedKey()
+  refs.settings.showModal()
+}
+
+refs.settingsForm.onsubmit = (e) => {
+  e.preventDefault()
+  saveSettings({ servingId: refs.settingsServing.value, key: refs.settingsKey.value })
+  refs.settings.close()
 }
 
 function lockLogin(busyNow) {

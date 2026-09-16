@@ -10,13 +10,13 @@
  *   이 함수는 프론트와 같은 오리진(/api/chat)에 있으므로 CORS 자체가 발생하지 않는다.
  *   서버 → 서버 호출에는 CORS 가 적용되지 않으므로 게이트웨이도 그대로 응답한다.
  *
- * 인증키
- *   브라우저가 Authorization 헤더로 보내면 그것을 쓰고, 없으면 환경변수 GENOS_AUTH_KEY 를 쓴다.
+ * 인증키 · 서빙 ID
+ *   브라우저가 Authorization / x-hc-serving-id 로 보내면 그것을 쓰고, 없으면 환경변수를 쓴다.
  *   환경변수를 설정해 두면 키가 브라우저에 전혀 노출되지 않는다 (권장).
  *
  * 환경변수 (Vercel > Project > Settings > Environment Variables)
  *   GENOS_AUTH_KEY  게이트웨이 인증키.  미설정 시 브라우저가 보낸 키를 쓴다
- *   SERVING_ID      코드서빙 ID.        기본값 688
+ *   SERVING_ID      코드서빙 ID.        브라우저가 보내지 않았을 때의 기본값. 기본 688
  *   GENOS_URL       게이트웨이 주소.    기본값 https://genos.genon.ai
  *
  * edge 런타임을 쓰는 이유: SSE 응답 body 를 버퍼링 없이 그대로 흘려보내기 위해서다.
@@ -25,6 +25,12 @@ export const config = { runtime: 'edge' }
 
 const GENOS_URL = process.env.GENOS_URL || 'https://genos.genon.ai'
 const SERVING_ID = process.env.SERVING_ID || '688'
+
+/** 브라우저가 고른 서빙 ID. URL 경로에 들어가므로 숫자만 받는다 — 아니면 서버 기본값. */
+const servingIdOf = (req) => {
+  const wanted = (req.headers.get('x-hc-serving-id') || '').trim()
+  return /^\d+$/.test(wanted) ? wanted : SERVING_ID
+}
 
 /* 브라우저에서 받아 게이트웨이로 넘기는 커스텀 헤더 — 세션 ID 와 보안 등급.
  * x-genos-* 는 게이트웨이가 지우므로(AuthKeyBearer) 스크럽 목록에 없는 이름을 쓴다.
@@ -56,7 +62,7 @@ export default async function handler(req) {
 
   let upstream
   try {
-    upstream = await fetch(`${GENOS_URL}/api/gateway/code_serving/${SERVING_ID}/chat`, {
+    upstream = await fetch(`${GENOS_URL}/api/gateway/code_serving/${servingIdOf(req)}/chat`, {
       method: 'POST',
       headers,
       body: await req.text(),
