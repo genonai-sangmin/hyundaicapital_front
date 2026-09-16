@@ -117,3 +117,17 @@ pre.sql { margin: 0; padding: 16px; background: #0d1b30; color: #dbe6f7; border-
 .notice .d { font-size: 13px; line-height: 21px; color: #6b5a4c; white-space: pre-wrap; }
 .muted { padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: #fafbfd;
          font-size: 13.5px; line-height: 21px; color: var(--ink-4); }
+
+/* ── 로그인 (index.html 의 <dialog id="login">) ─────────────── */
+.login { width: 380px; max-width: calc(100vw - 32px); padding: 32px; border: 1px solid var(--line-2);
+         border-radius: 16px; background: #fff; color: var(--ink); box-shadow: 0 24px 60px rgba(6, 27, 62, .18); }
+.login::backdrop { background: rgba(6, 27, 62, .45); }
+.login form { display: flex; flex-direction: column; gap: 16px; }
+.login-brand { font-size: 17px; font-weight: 600; color: var(--navy-900); }
+.login-desc { margin: -8px 0 0; font-size: 13px; line-height: 20px; color: var(--ink-4); }
+.login-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: var(--ink-3); }
+.login-field input { height: 42px; padding: 0 12px; border: 1px solid var(--line-3); border-radius: 8px;
+                     font-family: inherit; font-size: 14px; color: var(--ink); background: #fff; }
+.login-field input:focus { outline: none; border-color: var(--navy-700); background: #f9fbff; }
+.login-field input:disabled { background: var(--surface-2); color: var(--ink-4); }
+.login-error { margin: 0; font-size: 13px; line-height: 19px; color: var(--warn); }

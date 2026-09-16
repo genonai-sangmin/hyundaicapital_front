@@ -26,10 +26,11 @@ export const config = { runtime: 'edge' }
 const GENOS_URL = process.env.GENOS_URL || 'https://genos.genon.ai'
 const SERVING_ID = process.env.SERVING_ID || '688'
 
-/* 세션 ID 커스텀 헤더 — 게이트웨이가 x-genos-session-id 를 지우므로 이 이름으로 실어 보낸다.
+/* 브라우저에서 받아 게이트웨이로 넘기는 커스텀 헤더 — 세션 ID 와 보안 등급.
+ * x-genos-* 는 게이트웨이가 지우므로(AuthKeyBearer) 스크럽 목록에 없는 이름을 쓴다.
  * 이 프록시는 헤더를 새로 만들어 보내므로, 여기서 명시적으로 넘기지 않으면 브라우저 값이 끊긴다.
- * ⚠ js/api.js 의 SESSION_HEADER, 백엔드 router.py 와 같은 이름이어야 한다. */
-const SESSION_HEADER = 'x-hc-session-id'
+ * ⚠ js/api.js 의 SESSION_HEADER·LEVEL_HEADER, 백엔드 router.py 와 같은 이름이어야 한다. */
+const PASS_THROUGH_HEADERS = ['x-hc-session-id', 'x-hc-security-level']
 
 /** 프론트가 이해하는 실패 응답 모양 — 백엔드 schemas.py 의 ChatResponse 와 같다. */
 const fail = (status, errMsg) =>
@@ -48,8 +49,10 @@ export default async function handler(req) {
   }
 
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }
-  const sessionId = req.headers.get(SESSION_HEADER)
-  if (sessionId) headers[SESSION_HEADER] = sessionId
+  for (const name of PASS_THROUGH_HEADERS) {
+    const value = req.headers.get(name)
+    if (value) headers[name] = value
+  }
 
   let upstream
   try {

@@ -7,9 +7,13 @@
  *   busy      스트리밍 중 (입력 잠금)
  *   awaiting  HITL 응답 대기 중 (입력 잠금 — 카드의 버튼으로만 진행할 수 있다)
  *   sessionId 대화 하나를 묶는 키. 백엔드 LangGraph 의 thread_id 가 된다.
+ *
+ * 화면은 로그인(<dialog id="login">) 을 통과해야 열린다. 로그인은 보안 등급(level) 을 받아 오는
+ * 관문이고, 받은 level 은 auth.js 가 들고 있다.
  */
 import { refs, el, esc, bottom } from './dom.js'
 import { promptKey } from './config.js'
+import { login } from './auth.js'
 import { streamChat, verify } from './api.js'
 import { addUser, appendToken, closeAnswer, addSources, addNotice } from './messages.js'
 import { addHitl } from './hitl.js'
@@ -127,5 +131,43 @@ refs.input.oninput = () => {
   refs.input.style.height = `${Math.min(refs.input.scrollHeight, 160)}px`
 }
 
+/* ── 로그인 ─────────────────────────────────────────────────
+ * 보안 등급(level)을 받아 두기 위한 관문. 성공할 때까지 대화 화면을 쓸 수 없다.
+ * level 은 auth.js 가 메모리에 들고 있다 — 지금은 화면 표시에만 쓰고,
+ * 등급별 문서 필터는 백엔드가 붙을 때 auth.securityLevel() 로 꺼내 쓴다. */
+refs.login.addEventListener('cancel', (e) => e.preventDefault())   // Esc 로 닫히면 관문이 무의미하다
+
+refs.loginForm.onsubmit = async (e) => {
+  e.preventDefault()
+  const userId = refs.loginId.value.trim()
+  const password = refs.loginPw.value
+  if (!userId || !password) return
+
+  lockLogin(true)
+  try {
+    const user = await login(userId, password)
+    refs.userAv.textContent = user.userId.slice(0, 1).toUpperCase()
+    refs.userName.textContent = user.userId
+    refs.userOrg.textContent = `보안등급 ${user.level}`
+    refs.login.close()
+    refs.input.focus()
+  } catch (err) {
+    refs.loginError.textContent = err.message
+    refs.loginError.hidden = false
+    refs.loginPw.value = ''
+    refs.loginPw.focus()
+  } finally {
+    lockLogin(false)
+  }
+}
+
+function lockLogin(busyNow) {
+  refs.loginSubmit.disabled = busyNow
+  refs.loginId.disabled = busyNow
+  refs.loginPw.disabled = busyNow
+  refs.loginSubmit.textContent = busyNow ? '확인 중...' : '로그인'
+  if (busyNow) refs.loginError.hidden = true
+}
+
 sync()
-refs.input.focus()
+refs.login.showModal()

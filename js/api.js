@@ -8,11 +8,16 @@
  *   event 종류: token | sourceDocuments | action | error | end
  */
 import { CHAT_URL, savedKey } from './config.js'
+import { securityLevel } from './auth.js'
 
 /** 세션 ID 를 싣는 커스텀 헤더. 게이트웨이가 `x-genos-*` 주체 헤더(x-genos-session-id 포함)를
  *  외부 인증키 호출에서 지우므로, 스크럽 목록에 없는 이름으로 우회한다.
  *  ⚠ 프록시(api/chat.js)와 백엔드(router.py)에 같은 이름이 박혀 있다. 바꾸려면 셋 다 바꾼다. */
 export const SESSION_HEADER = 'x-hc-session-id'
+
+/** 로그인에서 받은 보안 등급(level)을 싣는 커스텀 헤더. 이름 규칙은 SESSION_HEADER 와 같다.
+ *  ⚠ 브라우저가 보내는 값이라 위조할 수 있다. 화면 분기용이고, 실제 접근 통제로 삼으면 안 된다. */
+export const LEVEL_HEADER = 'x-hc-security-level'
 
 const FRAME_SEP = '\n\n'
 const DATA_PREFIX = 'data: '
@@ -23,6 +28,9 @@ function headers(sessionId) {
   const key = savedKey()
   if (key) h.Authorization = `Bearer ${key}`
   if (sessionId) h[SESSION_HEADER] = sessionId
+
+  const level = securityLevel()
+  if (level !== null) h[LEVEL_HEADER] = String(level)
   return h
 }
 

@@ -14,6 +14,15 @@ export const refs = {
   badge: document.getElementById('badge'),
   title: document.getElementById('title'),
   navList: document.getElementById('nav-list'),
+  userAv: document.getElementById('user-av'),
+  userName: document.getElementById('user-name'),
+  userOrg: document.getElementById('user-org'),
+  login: document.getElementById('login'),
+  loginForm: document.getElementById('login-form'),
+  loginId: document.getElementById('login-id'),
+  loginPw: document.getElementById('login-pw'),
+  loginError: document.getElementById('login-error'),
+  loginSubmit: document.getElementById('login-submit'),
 }
 
 /** HTML 특수문자를 이스케이프한다. innerHTML 에 넣는 모든 사용자·모델 문자열은 반드시 통과시킨다. */

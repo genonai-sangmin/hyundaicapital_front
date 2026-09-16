@@ -37,10 +37,10 @@
     <div class="spacer"></div>
 
     <div class="nav-user">
-      <div class="av">사</div>
+      <div class="av" id="user-av">?</div>
       <div>
-        <div class="u-name">사용자</div>
-        <div class="u-org">현대캐피탈</div>
+        <div class="u-name" id="user-name">로그인 필요</div>
+        <div class="u-org" id="user-org">현대캐피탈</div>
       </div>
     </div>
   </nav>
@@ -86,6 +86,28 @@
 
   </div>
 </div>
+
+<!-- ── 로그인 ───────────────────────────────────────────────
+     <dialog> 의 showModal() 은 배경 클릭 차단·포커스 가둠·Esc 처리를 브라우저가 해 준다.
+     Esc 로 닫히면 안 되므로 cancel 이벤트를 js/app.js 에서 막는다. -->
+<dialog class="login" id="login">
+  <form id="login-form">
+    <div class="login-brand">현대캐피탈 AI 어시스턴트</div>
+    <p class="login-desc">GenOS 계정으로 로그인하면 보안 등급이 확인됩니다.</p>
+
+    <label class="login-field">
+      <span>아이디</span>
+      <input id="login-id" type="text" autocomplete="username" autofocus required>
+    </label>
+    <label class="login-field">
+      <span>비밀번호</span>
+      <input id="login-pw" type="password" autocomplete="current-password" required>
+    </label>
+
+    <p class="login-error" id="login-error" hidden></p>
+    <button class="btn-primary" id="login-submit" type="submit">로그인</button>
+  </form>
+</dialog>
 
 <script type="module" src="js/app.js"></script>
 </body>
