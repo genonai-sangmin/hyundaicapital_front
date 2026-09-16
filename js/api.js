@@ -9,14 +9,20 @@
  */
 import { CHAT_URL, savedKey } from './config.js'
 
+/** 세션 ID 를 싣는 커스텀 헤더. 게이트웨이가 `x-genos-*` 주체 헤더(x-genos-session-id 포함)를
+ *  외부 인증키 호출에서 지우므로, 스크럽 목록에 없는 이름으로 우회한다.
+ *  ⚠ 프록시(api/chat.js)와 백엔드(router.py)에 같은 이름이 박혀 있다. 바꾸려면 셋 다 바꾼다. */
+export const SESSION_HEADER = 'x-hc-session-id'
+
 const FRAME_SEP = '\n\n'
 const DATA_PREFIX = 'data: '
 
 /** 저장된 키가 있을 때만 실어 보낸다. 없으면 프록시가 서버 키로 처리한다. */
-function headers() {
+function headers(sessionId) {
   const h = { 'Content-Type': 'application/json' }
   const key = savedKey()
   if (key) h.Authorization = `Bearer ${key}`
+  if (sessionId) h[SESSION_HEADER] = sessionId
   return h
 }
 
@@ -36,14 +42,19 @@ async function failure(res) {
  * 한 턴을 보내고 SSE 응답을 받는다. 프레임이 올 때마다 onFrame({event, data}) 을 부른다.
  * 스트림이 끝나면 resolve 된다.
  *
- * 세션 ID 는 헤더가 아니라 **바디** 로 보낸다 — 게이트웨이가 x-genos-session-id 를 지운다.
+ * 세션 ID 는 커스텀 헤더(SESSION_HEADER)로 보낸다 — 게이트웨이가 x-genos-session-id 를 지운다.
+ * 바디에도 같이 실어 둔다(프록시가 헤더를 흘렸을 때의 폴백).
  */
 export async function streamChat({ question, humanInput, sessionId }, onFrame) {
   const body = humanInput
     ? { question: '', stream: true, humanInput, sessionId }
     : { question, stream: true, sessionId }
 
-  const res = await fetch(CHAT_URL, { method: 'POST', headers: headers(), body: JSON.stringify(body) })
+  const res = await fetch(CHAT_URL, {
+    method: 'POST',
+    headers: headers(sessionId),
+    body: JSON.stringify(body),
+  })
   if (!res.ok) throw await failure(res)
 
   const reader = res.body.getReader()
