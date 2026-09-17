@@ -60,6 +60,14 @@ export default async function handler(req) {
     if (value) headers[name] = value
   }
 
+  /* W3C traceparent — 요청 1건 = Langfuse 트레이스 1건.
+   * 게이트웨이는 파드로 나갈 때 자기 span 을 traceparent 로 싣지 않는다(HTTP 계측 억제). 대신 여기서 온
+   * traceparent 를 부모로 채택하고 그대로 파드까지 넘기므로, 이 헤더 하나로 게이트웨이 span 과 코드서빙
+   * 내부 span(llm·tool.*)이 같은 트레이스에 묶인다. 없으면 둘이 별개 트레이스로 갈라진다.
+   * 형식: 00-<trace_id 32hex>-<span_id 16hex>-01 */
+  const hex = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, '0')).join('')
+  headers.traceparent = `00-${hex(16)}-${hex(8)}-01`
+
   let upstream
   try {
     upstream = await fetch(`${GENOS_URL}/api/gateway/code_serving/${servingIdOf(req)}/chat`, {
