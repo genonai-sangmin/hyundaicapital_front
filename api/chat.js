@@ -40,6 +40,17 @@ const servingIdOf = (req) => {
  * 그대로 흘려 코드서빙 span 이 같은 트레이스에 붙는다. baggage 는 게이트웨이가 지우므로 뺀다. */
 const PASS_THROUGH_HEADERS = ['x-hc-session-id', 'x-hc-security-level', 'traceparent', 'tracestate']
 
+/* W3C traceparent 생성 — 게이트웨이도 브라우저도 만들어 주지 않으므로 여기서 만든다.
+ * 없으면 게이트웨이의 code_serving span(= 코드서빙 이용로그)과 파드 안의 LLM·툴 span 이
+ * 서로 다른 트레이스로 갈라져, 이용로그를 눌러도 파드에서 무슨 일이 있었는지 안 보인다.
+ * 게이트웨이는 이 헤더를 지우지 않고 파드까지 그대로 흘린다(utils/http.py get_excluded_headers).
+ * ponytail: parent span id 는 실제로 export 되지 않는 가짜다 — 이 프록시는 span 을 내보낼 수
+ *           없기 때문. trace 묶기에는 충분하다. 프록시 구간까지 트레이스에 남겨야 하면
+ *           그때 edge 에 OTel 을 붙인다. */
+const hex = (bytes) =>
+  [...crypto.getRandomValues(new Uint8Array(bytes))].map((b) => b.toString(16).padStart(2, '0')).join('')
+const traceparent = (req) => req.headers.get('traceparent') || `00-${hex(16)}-${hex(8)}-01`
+
 /** 프론트가 이해하는 실패 응답 모양 — 백엔드 schemas.py 의 ChatResponse 와 같다. */
 const fail = (status, errMsg) =>
   new Response(JSON.stringify({ code: 1, errMsg, data: { text: '' } }), {
@@ -61,6 +72,7 @@ export default async function handler(req) {
     const value = req.headers.get(name)
     if (value) headers[name] = value
   }
+  headers.traceparent = traceparent(req)
 
   let upstream
   try {
