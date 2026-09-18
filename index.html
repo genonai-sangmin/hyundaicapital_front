@@ -43,6 +43,20 @@
         <div class="u-org" id="user-org">현대캐피탈</div>
       </div>
     </div>
+
+    <!-- 보안 등급 — 서버에서 받지 않고 사용자가 직접 고른다(데모용). 문서 검색이 이 등급 이하만 본다. -->
+    <label class="nav-level">
+      <span>보안 등급</span>
+      <select id="level" disabled>
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+      </select>
+    </label>
   </nav>
 
   <!-- ── 본문 ─────────────────────────────────────────────── -->
@@ -93,7 +107,7 @@
 <dialog class="login" id="login">
   <form id="login-form">
     <div class="login-brand">현대캐피탈 AI 어시스턴트</div>
-    <p class="login-desc">GenOS 계정으로 로그인하면 보안 등급이 확인됩니다.</p>
+    <p class="login-desc">테스트 계정 <b>test</b> / <b>test1234</b> 로 로그인합니다. 보안 등급은 로그인 후 좌측 하단에서 직접 고릅니다.</p>
 
     <label class="login-field">
       <span>아이디</span>

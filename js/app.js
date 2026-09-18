@@ -8,12 +8,12 @@
  *   awaiting  HITL 응답 대기 중 (입력 잠금 — 카드의 버튼으로만 진행할 수 있다)
  *   sessionId 대화 하나를 묶는 키. 백엔드 LangGraph 의 thread_id 가 된다.
  *
- * 화면은 로그인(<dialog id="login">) 을 통과해야 열린다. 로그인은 보안 등급(level) 을 받아 오는
- * 관문이고, 받은 level 은 auth.js 가 들고 있다.
+ * 화면은 로그인(<dialog id="login">) 을 통과해야 열린다. 로그인은 테스트 계정으로만 통과한다.
+ * 보안 등급(level) 은 로그인 뒤 좌측 하단에서 사용자가 직접 고르고, auth.js 가 들고 있다.
  */
 import { refs, el, esc, bottom } from './dom.js'
 import { savedKey, savedServingId, saveSettings } from './config.js'
-import { login } from './auth.js'
+import { login, setSecurityLevel } from './auth.js'
 import { streamChat, verify } from './api.js'
 import { addUser, appendToken, closeAnswer, addSources, addNotice } from './messages.js'
 import { addHitl } from './hitl.js'
@@ -132,9 +132,7 @@ refs.input.oninput = () => {
 }
 
 /* ── 로그인 ─────────────────────────────────────────────────
- * 보안 등급(level)을 받아 두기 위한 관문. 성공할 때까지 대화 화면을 쓸 수 없다.
- * level 은 auth.js 가 메모리에 들고 있다 — 지금은 화면 표시에만 쓰고,
- * 등급별 문서 필터는 백엔드가 붙을 때 auth.securityLevel() 로 꺼내 쓴다. */
+ * 테스트 계정(auth.js)으로만 통과하는 관문. 성공할 때까지 대화 화면을 쓸 수 없다. */
 refs.login.addEventListener('cancel', (e) => e.preventDefault())   // Esc 로 닫히면 관문이 무의미하다
 
 refs.loginForm.onsubmit = async (e) => {
@@ -148,7 +146,9 @@ refs.loginForm.onsubmit = async (e) => {
     const user = await login(userId, password)
     refs.userAv.textContent = user.userId.slice(0, 1).toUpperCase()
     refs.userName.textContent = user.userId
-    refs.userOrg.textContent = `보안등급 ${user.level}`
+    refs.level.value = String(user.level)
+    refs.level.disabled = false
+    showLevel(user.level)
     refs.login.close()
     refs.input.focus()
   } catch (err) {
@@ -159,6 +159,17 @@ refs.loginForm.onsubmit = async (e) => {
   } finally {
     lockLogin(false)
   }
+}
+
+/* ── 보안 등급 ───────────────────────────────────────────────
+ * 사용자가 직접 고른다. api.js 가 매 요청에 auth.securityLevel() 을 실어 보낸다.
+ * ⚠ 브라우저 값이라 위조할 수 있다 — 데모용이고 실제 접근 통제가 아니다. */
+const showLevel = (level) => { refs.userOrg.textContent = `보안등급 ${level}` }
+
+refs.level.onchange = () => {
+  const level = Number(refs.level.value)
+  setSecurityLevel(level)
+  showLevel(level)
 }
 
 /* ── 연결 설정 ───────────────────────────────────────────────

@@ -17,6 +17,7 @@ export const refs = {
   userAv: document.getElementById('user-av'),
   userName: document.getElementById('user-name'),
   userOrg: document.getElementById('user-org'),
+  level: document.getElementById('level'),
   login: document.getElementById('login'),
   loginForm: document.getElementById('login-form'),
   loginId: document.getElementById('login-id'),
