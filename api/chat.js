@@ -35,8 +35,10 @@ const servingIdOf = (req) => {
 /* 브라우저에서 받아 게이트웨이로 넘기는 커스텀 헤더 — 세션 ID 와 보안 등급.
  * x-genos-* 는 게이트웨이가 지우므로(AuthKeyBearer) 스크럽 목록에 없는 이름을 쓴다.
  * 이 프록시는 헤더를 새로 만들어 보내므로, 여기서 명시적으로 넘기지 않으면 브라우저 값이 끊긴다.
- * ⚠ js/api.js 의 SESSION_HEADER·LEVEL_HEADER, 백엔드 router.py 와 같은 이름이어야 한다. */
-const PASS_THROUGH_HEADERS = ['x-hc-session-id', 'x-hc-security-level']
+ * ⚠ js/api.js 의 SESSION_HEADER·LEVEL_HEADER, 백엔드 router.py 와 같은 이름이어야 한다.
+ * traceparent/tracestate 는 W3C 추적 컨텍스트 — 호출자가 만들어 보내면 게이트웨이가 파드까지
+ * 그대로 흘려 코드서빙 span 이 같은 트레이스에 붙는다. baggage 는 게이트웨이가 지우므로 뺀다. */
+const PASS_THROUGH_HEADERS = ['x-hc-session-id', 'x-hc-security-level', 'traceparent', 'tracestate']
 
 /** 프론트가 이해하는 실패 응답 모양 — 백엔드 schemas.py 의 ChatResponse 와 같다. */
 const fail = (status, errMsg) =>
