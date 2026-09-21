@@ -30,10 +30,16 @@
 .nav-user .u-org { font-size: 11px; color: #8ea3c1; }
 
 .nav-level { display: flex; align-items: center; justify-content: space-between; gap: 10px;
-             padding: 0 20px 16px; font-size: 11px; color: #8ea3c1; }
-.nav-level select { background: var(--navy-700); color: #fff; border: 1px solid var(--navy-500);
-                    border-radius: 6px; padding: 5px 8px; font-family: inherit; font-size: 12px; cursor: pointer; }
+             padding: 0 20px 8px; font-size: 11px; color: #8ea3c1; }
+.nav-level span { flex-shrink: 0; }
+.nav-level select { flex: 1 1 auto; min-width: 0; background: var(--navy-700); color: #fff;
+                    border: 1px solid var(--navy-500); border-radius: 6px; padding: 5px 8px;
+                    font-family: inherit; font-size: 12px; cursor: pointer; }
 .nav-level select:disabled { opacity: .5; cursor: default; }
+
+/* 선택한 소속이 만들어 낸 검색 범위(ai_drive_node_path 접두어) */
+.nav-path { padding: 2px 20px 16px; font-family: var(--font-mono);
+            font-size: 10.5px; color: #7d90ad; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── 본문 ──────────────────────────────────────────────────── */
 .main { flex-grow: 1; display: flex; flex-direction: column; background: #fff; min-width: 0; }

@@ -9,11 +9,13 @@
  *   sessionId 대화 하나를 묶는 키. 백엔드 LangGraph 의 thread_id 가 된다.
  *
  * 화면은 로그인(<dialog id="login">) 을 통과해야 열린다. 로그인은 테스트 계정으로만 통과한다.
- * 보안 등급(level) 은 로그인 뒤 좌측 하단에서 사용자가 직접 고르고, auth.js 가 들고 있다.
+ * 보안 등급(level) 과 소속(부서·팀·권한 범위) 은 로그인 뒤 좌측 하단에서 사용자가 직접 고르고,
+ * auth.js 가 들고 있다.
  */
 import { refs, el, esc, bottom } from './dom.js'
 import { savedKey, savedServingId, saveSettings } from './config.js'
-import { login, setSecurityLevel } from './auth.js'
+import { login, setSecurityLevel, setOrg, documentScope } from './auth.js'
+import { ORG, SCOPES } from './org.js'
 import { streamChat, verify } from './api.js'
 import { addUser, appendToken, closeAnswer, addSources, addNotice } from './messages.js'
 import { addHitl } from './hitl.js'
@@ -149,6 +151,7 @@ refs.loginForm.onsubmit = async (e) => {
     refs.level.value = String(user.level)
     refs.level.disabled = false
     showLevel(user.level)
+    enableOrg(user)
     refs.login.close()
     refs.input.focus()
   } catch (err) {
@@ -171,6 +174,51 @@ refs.level.onchange = () => {
   setSecurityLevel(level)
   showLevel(level)
 }
+
+/* ── 소속 · 권한 범위 ────────────────────────────────────────
+ * 부서/팀/범위를 고르면 노드 경로 접두어 하나가 나오고(org.js), api.js 가 매 요청에 실어 보낸다.
+ * 백엔드는 그 접두어로 시작하는 문서만 검색한다.
+ *   팀원        내 팀만        부서 상급자  산하 팀 전부        전체 상급자  전 부서
+ * ⚠ 브라우저 값이라 위조할 수 있다 — 데모용이고 실제 접근 통제가 아니다. */
+const option = (value, label) => `<option value="${esc(value)}">${esc(label)}</option>`
+
+const fill = (select, entries, selected) => {
+  select.innerHTML = entries.map(([value, label]) => option(value, label)).join('')
+  select.value = selected
+}
+
+/** 고른 부서의 팀만 채운다. 부서를 바꾸면 그 부서의 첫 팀으로 옮겨 간다. */
+function fillTeams(dept, team) {
+  const teams = Object.entries(ORG[dept].teams)
+  const picked = teams.some(([id]) => id === team) ? team : teams[0][0]
+  fill(refs.team, teams, picked)
+  return picked
+}
+
+/** 화면의 선택을 auth 에 반영하고, 만들어진 검색 범위를 보여 준다. */
+function applyOrg() {
+  const dept = refs.dept.value
+  const team = fillTeams(dept, refs.team.value)
+  const scope = refs.scope.value
+
+  // 상급자는 팀을 고를 필요가 없다 — 경로에서 팀(전체 상급자는 부서까지) 세그먼트가 빠진다
+  refs.team.disabled = scope !== 'team'
+  refs.dept.disabled = scope === 'all'
+
+  setOrg({ dept, team, scope })
+  refs.scopePath.textContent = documentScope()
+}
+
+function enableOrg(user) {
+  fill(refs.dept, Object.entries(ORG).map(([id, d]) => [id, d.label]), user.dept)
+  fill(refs.scope, Object.entries(SCOPES), user.scope)
+  refs.scope.disabled = false
+  applyOrg()
+}
+
+refs.dept.onchange = applyOrg
+refs.team.onchange = applyOrg
+refs.scope.onchange = applyOrg
 
 /* ── 연결 설정 ───────────────────────────────────────────────
  * 모델 서빙 ID 와 인증 토큰. 둘 다 선택이고, 비우면 서버 기본값으로 돌아간다. */

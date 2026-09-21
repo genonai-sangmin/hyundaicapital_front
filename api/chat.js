@@ -38,7 +38,8 @@ const servingIdOf = (req) => {
  * ⚠ js/api.js 의 SESSION_HEADER·LEVEL_HEADER, 백엔드 router.py 와 같은 이름이어야 한다.
  * traceparent/tracestate 는 W3C 추적 컨텍스트 — 호출자가 만들어 보내면 게이트웨이가 파드까지
  * 그대로 흘려 코드서빙 span 이 같은 트레이스에 붙는다. baggage 는 게이트웨이가 지우므로 뺀다. */
-const PASS_THROUGH_HEADERS = ['x-hc-session-id', 'x-hc-security-level', 'traceparent', 'tracestate']
+const PASS_THROUGH_HEADERS = ['x-hc-session-id', 'x-hc-security-level', 'x-hc-node-path',
+                              'traceparent', 'tracestate']
 
 /* W3C traceparent 생성 — 게이트웨이도 브라우저도 만들어 주지 않으므로 여기서 만든다.
  * 없으면 게이트웨이의 code_serving span(= 코드서빙 이용로그)과 파드 안의 LLM·툴 span 이
